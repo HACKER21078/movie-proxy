@@ -3,6 +3,7 @@ const cors = require('cors');
 const fetch = require('node-fetch');
 const http = require('http');
 const WebSocket = require('ws');
+const url = require('url');
 
 const app = express();
 app.use(cors());
@@ -33,23 +34,51 @@ app.get('/stream', async (req, res) => {
 // Create HTTP server for both Express and WebSocket
 const server = http.createServer(app);
 
+// WebSocket rooms: partyId -> Set of clients
+const rooms = {};
+
 // Setup WebSocket server
 const wss = new WebSocket.Server({ server });
 
-wss.on('connection', (ws) => {
-  console.log('WebSocket client connected');
+wss.on('connection', (ws, req) => {
+  const parsedUrl = url.parse(req.url, true);
+  const partyId = parsedUrl.query.partyId || 'default';
+
+  console.log(`[WS] Client connected to party: ${partyId}`);
+
+  // Join room
+  if (!rooms[partyId]) rooms[partyId] = new Set();
+  rooms[partyId].add(ws);
 
   ws.on('message', (message) => {
-    // Broadcast incoming message to all other connected clients
-    wss.clients.forEach(client => {
+    let data;
+    try {
+      data = JSON.parse(message);
+    } catch (e) {
+      console.error('[WS] Invalid message:', message);
+      return;
+    }
+
+    const targetRoom = rooms[data.partyId || partyId];
+    if (!targetRoom) return;
+
+    // Broadcast to others in same room
+    for (const client of targetRoom) {
       if (client !== ws && client.readyState === WebSocket.OPEN) {
-        client.send(message);
+        client.send(JSON.stringify(data));
       }
-    });
+    }
   });
 
   ws.on('close', () => {
-    console.log('WebSocket client disconnected');
+    console.log(`[WS] Client disconnected from party: ${partyId}`);
+    const room = rooms[partyId];
+    if (room) {
+      room.delete(ws);
+      if (room.size === 0) {
+        delete rooms[partyId];
+      }
+    }
   });
 });
 
