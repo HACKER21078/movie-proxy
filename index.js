@@ -10,7 +10,7 @@ app.use(cors());
 
 const PORT = process.env.PORT || 3000;
 
-// Movie proxy route
+// 🎥 Movie proxy route
 app.get('/stream', async (req, res) => {
   const imdbid = req.query.imdbid;
   if (!imdbid) return res.status(400).json({ error: 'Missing imdbid parameter' });
@@ -22,7 +22,6 @@ app.get('/stream', async (req, res) => {
     if (!response.ok) return res.status(response.status).json({ error: 'Failed to fetch from target' });
 
     const data = await response.json();
-
     if (!data['m3u8-url']) return res.status(404).json({ error: 'No stream URL found' });
 
     res.json(data);
@@ -31,13 +30,13 @@ app.get('/stream', async (req, res) => {
   }
 });
 
-// Create HTTP server for both Express and WebSocket
+// 🌐 Create HTTP server
 const server = http.createServer(app);
 
-// WebSocket rooms: partyId -> Set of clients
+// 🧠 WebSocket rooms: partyId => Set of clients
 const rooms = {};
 
-// Setup WebSocket server
+// 🔌 Setup WebSocket server
 const wss = new WebSocket.Server({ server });
 
 wss.on('connection', (ws, req) => {
@@ -46,7 +45,6 @@ wss.on('connection', (ws, req) => {
 
   console.log(`[WS] Client connected to party: ${partyId}`);
 
-  // Join room
   if (!rooms[partyId]) rooms[partyId] = new Set();
   rooms[partyId].add(ws);
 
@@ -54,7 +52,7 @@ wss.on('connection', (ws, req) => {
     let data;
     try {
       data = JSON.parse(message);
-    } catch (e) {
+    } catch (err) {
       console.error('[WS] Invalid message:', message);
       return;
     }
@@ -62,7 +60,6 @@ wss.on('connection', (ws, req) => {
     const targetRoom = rooms[data.partyId || partyId];
     if (!targetRoom) return;
 
-    // Broadcast to others in same room
     for (const client of targetRoom) {
       if (client !== ws && client.readyState === WebSocket.OPEN) {
         client.send(JSON.stringify(data));
@@ -75,14 +72,12 @@ wss.on('connection', (ws, req) => {
     const room = rooms[partyId];
     if (room) {
       room.delete(ws);
-      if (room.size === 0) {
-        delete rooms[partyId];
-      }
+      if (room.size === 0) delete rooms[partyId];
     }
   });
 });
 
-// Start the server (both HTTP and WebSocket)
+// 🚀 Start server
 server.listen(PORT, () => {
   console.log(`Server running on port ${PORT}`);
 });
