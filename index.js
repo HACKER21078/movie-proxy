@@ -10,24 +10,52 @@ app.use(cors());
 
 const PORT = process.env.PORT || 3000;
 
-// 🎥 Movie proxy route
+// 🎥 Movie proxy route with fallback to public CORS proxies
 app.get('/stream', async (req, res) => {
   const imdbid = req.query.imdbid;
   if (!imdbid) return res.status(400).json({ error: 'Missing imdbid parameter' });
 
-  const targetUrl = `http://88.99.145.13:25565/get_movie_by_imdbid?imdbid=${imdbid}`;
+  const baseUrl = `http://88.99.145.13:25565/get_movie_by_imdbid?imdbid=${imdbid}`;
 
-  try {
-    const response = await fetch(targetUrl);
-    if (!response.ok) return res.status(response.status).json({ error: 'Failed to fetch from target' });
+  // Public CORS proxies that append encoded target URL
+  const corsProxies = [
+    '', // try direct first
+    'https://cors.bridged.cc/',
+    'https://api.allorigins.win/raw?url=',
+    'https://thingproxy.freeboard.io/fetch/',
+    'https://corsproxy.io/?',
+  ];
 
-    const data = await response.json();
-    if (!data['m3u8-url']) return res.status(404).json({ error: 'No stream URL found' });
+  let lastError = null;
 
-    res.json(data);
-  } catch (error) {
-    res.status(500).json({ error: 'Internal server error', details: error.message });
+  for (const proxy of corsProxies) {
+    const fetchUrl = proxy ? proxy + encodeURIComponent(baseUrl) : baseUrl;
+
+    try {
+      const response = await fetch(fetchUrl, {
+        headers: proxy ? {} : { 'User-Agent': 'Node.js' },
+      });
+
+      if (!response.ok) {
+        lastError = new Error(`Failed with status ${response.status} at ${fetchUrl}`);
+        continue;
+      }
+
+      const data = await response.json();
+
+      if (data && data['m3u8-url']) {
+        return res.json(data);
+      } else {
+        lastError = new Error(`No 'm3u8-url' found in response from ${fetchUrl}`);
+        continue;
+      }
+    } catch (err) {
+      lastError = err;
+      continue;
+    }
   }
+
+  res.status(500).json({ error: 'All attempts failed to fetch stream URL', details: lastError?.message });
 });
 
 // 🛡️ CORS proxy for m3u8 / ts files
@@ -39,7 +67,6 @@ app.get('/proxy', async (req, res) => {
     const proxyRes = await fetch(target, {
       headers: {
         'User-Agent': 'Mozilla/5.0',
-        // Some servers require a referrer or origin header
         'Origin': 'https://moviestream4k.puter.site',
         'Referer': 'https://moviestream4k.puter.site'
       }
