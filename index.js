@@ -30,6 +30,33 @@ app.get('/stream', async (req, res) => {
   }
 });
 
+// 🛡️ CORS proxy for m3u8 / ts files
+app.get('/proxy', async (req, res) => {
+  const target = req.query.url;
+  if (!target) return res.status(400).json({ error: 'Missing url parameter' });
+
+  try {
+    const proxyRes = await fetch(target, {
+      headers: {
+        'User-Agent': 'Mozilla/5.0',
+        // Some servers require a referrer or origin header
+        'Origin': 'https://moviestream4k.puter.site',
+        'Referer': 'https://moviestream4k.puter.site'
+      }
+    });
+
+    if (!proxyRes.ok) {
+      return res.status(proxyRes.status).send('Proxy request failed');
+    }
+
+    res.set('Content-Type', proxyRes.headers.get('content-type') || 'application/octet-stream');
+    proxyRes.body.pipe(res);
+  } catch (err) {
+    console.error('[Proxy] Error fetching:', err.message);
+    res.status(500).send('Proxy error');
+  }
+});
+
 // 🌐 Create HTTP server
 const server = http.createServer(app);
 
