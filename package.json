@@ -1,5 +1,5 @@
 {
-  "name": "movie-proxy",
+  "name": "MovieStream",
   "version": "1.0.0",
   "main": "index.js",
   "license": "MIT",
