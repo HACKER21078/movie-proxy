@@ -161,7 +161,7 @@ app.get('/share/:imdbid', async (req, res) => {
     const image = data.Poster !== 'N/A' ? data.Poster : 'https://8upload.com/image/683f52a6d65b3/mstile-310x310.png';
     const pageUrl = `https://moviestream4k.puter.site/?id=${imdbid}`;
 
-    const html = `
+const html = `
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -179,43 +179,50 @@ app.get('/share/:imdbid', async (req, res) => {
   <meta property="og:site_name" content="MovieStream" />
   <meta http-equiv="refresh" content="3;url=${pageUrl}" />
   <style>
-    @import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@700&display=swap');
+    @import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@600&display=swap');
+
     body {
-      margin: 0; 
-      height: 100vh; 
-      background: linear-gradient(135deg, #000000, #6b4f00);
-      color: #d4af37; /* gold */
+      margin: 0;
+      height: 100vh;
+      background: radial-gradient(ellipse at center, #1a1a1a 0%, #000000 80%);
+      color: #ffd700;
       font-family: 'Montserrat', sans-serif;
-      display: flex; 
-      flex-direction: column; 
-      justify-content: center; 
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
       align-items: center;
       text-align: center;
+      overflow: hidden;
     }
+
     .loading-text {
-      font-size: 3rem;
-      font-weight: 700;
-      letter-spacing: 0.1em;
-      animation: pulse 2s infinite;
-      margin-bottom: 0.5rem;
+      font-size: 2.8rem;
+      letter-spacing: 1px;
+      font-weight: 600;
+      animation: glow 2s infinite alternate;
     }
+
     .redirect-text {
-      font-size: 1.2rem;
-      opacity: 0.8;
-      cursor: pointer;
+      margin-top: 1.5rem;
+      font-size: 1.1rem;
+      opacity: 0.7;
+      color: #ffd700;
       text-decoration: underline;
+      transition: opacity 0.3s;
     }
+
     .redirect-text:hover {
       opacity: 1;
     }
-    @keyframes pulse {
-      0%, 100% {
+
+    @keyframes glow {
+      from {
+        text-shadow: 0 0 5px #ffd700, 0 0 10px #ffd700, 0 0 20px #ffcc00;
         opacity: 1;
-        text-shadow: 0 0 10px #d4af37, 0 0 20px #d4af37, 0 0 30px #d4af37;
       }
-      50% {
-        opacity: 0.6;
-        text-shadow: none;
+      to {
+        text-shadow: 0 0 2px #ccaa00, 0 0 5px #ccaa00, 0 0 10px #ccaa00;
+        opacity: 0.85;
       }
     }
   </style>
@@ -226,6 +233,7 @@ app.get('/share/:imdbid', async (req, res) => {
 </body>
 </html>
 `;
+
 
     res.send(html);
   } catch (err) {
