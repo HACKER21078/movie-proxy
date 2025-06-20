@@ -156,30 +156,63 @@ app.get('/share/:imdbid', async (req, res) => {
     const data = await response.json();
 
     const title = data.Title || 'MovieStream – Watch Now';
-    const description = data.Plot || 'Stream your movie instantly.';
+    const description = `Watch ${data.Title || 'this movie'} on MovieStream`; // Changed here
     const image = data.Poster !== 'N/A' ? data.Poster : 'https://8upload.com/image/683f52a6d65b3/mstile-310x310.png';
     const pageUrl = `https://moviestream4k.puter.site/?id=${imdbid}`;
 
-    const html = `
+const html = `
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
+  <meta charset="UTF-8" />
   <title>${title}</title>
-  <meta name="twitter:card" content="summary_large_image">
-  <meta name="twitter:title" content="${title}">
-  <meta name="twitter:description" content="${description}">
-  <meta name="twitter:image" content="${image}">
-  <meta property="og:title" content="${title}">
-  <meta property="og:description" content="${description}">
-  <meta property="og:image" content="${image}">
-  <meta property="og:url" content="${pageUrl}">
-  <meta property="og:type" content="video.movie">
-  <meta property="og:site_name" content="MovieStream">
-  <meta http-equiv="refresh" content="3;url=${pageUrl}">
+  <meta name="twitter:card" content="summary_large_image" />
+  <meta name="twitter:title" content="${title}" />
+  <meta name="twitter:description" content="${description}" />
+  <meta name="twitter:image" content="${image}" />
+  <meta property="og:title" content="${title}" />
+  <meta property="og:description" content="${description}" />
+  <meta property="og:image" content="${image}" />
+  <meta property="og:url" content="${pageUrl}" />
+  <meta property="og:type" content="video.movie" />
+  <meta property="og:site_name" content="MovieStream" />
+  <meta http-equiv="refresh" content="3;url=${pageUrl}" />
+  <style>
+    body {
+      margin: 0;
+      background: #000000;
+      color: #d4af37; /* gold */
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      height: 100vh;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      text-align: center;
+    }
+    h1 {
+      font-size: 3rem;
+      margin: 0;
+      font-weight: 700;
+      text-shadow: 0 0 5px #d4af37;
+    }
+    p {
+      font-size: 1.25rem;
+      margin-top: 1rem;
+    }
+    a {
+      color: #d4af37;
+      text-decoration: underline;
+      cursor: pointer;
+    }
+    a:hover {
+      color: #fff;
+    }
+  </style>
 </head>
 <body>
-  <p>Loading movie preview... <a href="${pageUrl}">Click here if not redirected.</a></p>
+  <h1>MovieStream loading...</h1>
+  <p><a href="${pageUrl}">Click here if not redirected.</a></p>
 </body>
 </html>
 `;
@@ -189,6 +222,7 @@ app.get('/share/:imdbid', async (req, res) => {
     res.status(500).send('Failed to generate movie preview');
   }
 });
+
 
 
 // 🌐 Create HTTP server
