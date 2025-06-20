@@ -148,7 +148,7 @@ app.get('/proxy', async (req, res) => {
 
 app.get('/share/:imdbid', async (req, res) => {
   const imdbid = req.params.imdbid;
-  const apiUrl = `https://www.omdbapi.com/?i=${imdbid}&apikey=YOUR_OMDB_API_KEY`;
+  const apiUrl = `https://www.omdbapi.com/?i=${imdbid}&apikey=70977963`;
 
   try {
     const response = await fetch(apiUrl);
