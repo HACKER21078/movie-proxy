@@ -146,6 +146,51 @@ app.get('/proxy', async (req, res) => {
   }
 });
 
+app.get('/share/:imdbid', async (req, res) => {
+  const imdbid = req.params.imdbid;
+  const apiUrl = `https://www.omdbapi.com/?i=${imdbid}&apikey=YOUR_OMDB_API_KEY`;
+
+  try {
+    const response = await fetch(apiUrl);
+    if (!response.ok) throw new Error(`OMDb failed with status ${response.status}`);
+    const data = await response.json();
+
+    const title = data.Title || 'MovieStream – Watch Now';
+    const description = data.Plot || 'Stream your movie instantly.';
+    const image = data.Poster !== 'N/A' ? data.Poster : 'https://8upload.com/image/683f52a6d65b3/mstile-310x310.png';
+    const pageUrl = `https://moviestream4k.puter.site/?id=${imdbid}`;
+
+    const html = `
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>${title}</title>
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="${title}">
+  <meta name="twitter:description" content="${description}">
+  <meta name="twitter:image" content="${image}">
+  <meta property="og:title" content="${title}">
+  <meta property="og:description" content="${description}">
+  <meta property="og:image" content="${image}">
+  <meta property="og:url" content="${pageUrl}">
+  <meta property="og:type" content="video.movie">
+  <meta property="og:site_name" content="MovieStream">
+  <meta http-equiv="refresh" content="3;url=${pageUrl}">
+</head>
+<body>
+  <p>Loading movie preview... <a href="${pageUrl}">Click here if not redirected.</a></p>
+</body>
+</html>
+`;
+    res.send(html);
+  } catch (err) {
+    console.error('[Meta Card Error]', err.message);
+    res.status(500).send('Failed to generate movie preview');
+  }
+});
+
+
 // 🌐 Create HTTP server
 const server = http.createServer(app);
 
