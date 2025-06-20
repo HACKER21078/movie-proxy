@@ -148,19 +148,20 @@ app.get('/proxy', async (req, res) => {
 
 app.get('/share/:imdbid', async (req, res) => {
   const imdbid = req.params.imdbid;
-  const apiUrl = `https://www.omdbapi.com/?i=${imdbid}&apikey=70977963`;
+  const apiUrl = `https://www.omdbapi.com/?i=${imdbid}&apikey=YOUR_OMDB_API_KEY`;
 
   try {
     const response = await fetch(apiUrl);
     if (!response.ok) throw new Error(`OMDb failed with status ${response.status}`);
     const data = await response.json();
 
-    const title = data.Title || 'MovieStream – Watch Now';
-    const description = `Watch ${data.Title || 'this movie'} on MovieStream`; // Changed here
+    const movieTitle = data.Title || 'MovieStream – Watch Now';
+    const title = `Watch ${movieTitle} on MovieStream`;
+    const description = data.Plot || 'Stream your movie instantly.';
     const image = data.Poster !== 'N/A' ? data.Poster : 'https://8upload.com/image/683f52a6d65b3/mstile-310x310.png';
     const pageUrl = `https://moviestream4k.puter.site/?id=${imdbid}`;
 
-const html = `
+    const html = `
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -178,50 +179,61 @@ const html = `
   <meta property="og:site_name" content="MovieStream" />
   <meta http-equiv="refresh" content="3;url=${pageUrl}" />
   <style>
+    @import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@700&display=swap');
     body {
-      margin: 0;
-      background: #000000;
+      margin: 0; 
+      height: 100vh; 
+      background: linear-gradient(135deg, #000000, #6b4f00);
       color: #d4af37; /* gold */
-      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-      height: 100vh;
-      display: flex;
-      flex-direction: column;
-      justify-content: center;
+      font-family: 'Montserrat', sans-serif;
+      display: flex; 
+      flex-direction: column; 
+      justify-content: center; 
       align-items: center;
       text-align: center;
     }
-    h1 {
+    .loading-text {
       font-size: 3rem;
-      margin: 0;
       font-weight: 700;
-      text-shadow: 0 0 5px #d4af37;
+      letter-spacing: 0.1em;
+      animation: pulse 2s infinite;
+      margin-bottom: 0.5rem;
     }
-    p {
-      font-size: 1.25rem;
-      margin-top: 1rem;
-    }
-    a {
-      color: #d4af37;
-      text-decoration: underline;
+    .redirect-text {
+      font-size: 1.2rem;
+      opacity: 0.8;
       cursor: pointer;
+      text-decoration: underline;
     }
-    a:hover {
-      color: #fff;
+    .redirect-text:hover {
+      opacity: 1;
+    }
+    @keyframes pulse {
+      0%, 100% {
+        opacity: 1;
+        text-shadow: 0 0 10px #d4af37, 0 0 20px #d4af37, 0 0 30px #d4af37;
+      }
+      50% {
+        opacity: 0.6;
+        text-shadow: none;
+      }
     }
   </style>
 </head>
 <body>
-  <h1>MovieStream loading...</h1>
-  <p><a href="${pageUrl}">Click here if not redirected.</a></p>
+  <div class="loading-text">MovieStream loading...</div>
+  <a href="${pageUrl}" class="redirect-text">Click here if not redirected.</a>
 </body>
 </html>
 `;
+
     res.send(html);
   } catch (err) {
     console.error('[Meta Card Error]', err.message);
     res.status(500).send('Failed to generate movie preview');
   }
 });
+
 
 
 
